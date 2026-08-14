@@ -378,6 +378,40 @@ org = ActiveRecord::Base.connection.select_one(
 puts ""
 puts "== Done! =="
 puts ""
+# ── Assessor login ───────────────────────────────────────────────────────────
+#
+# Without this, POST /api/v1/auth/login cannot succeed on a fresh database:
+# no User row exists, so the endpoint always answers "Invalid email or
+# password" and the only way into the product is minting a JWT by hand in the
+# console. The login screen is unusable as shipped.
+#
+# AuthenticationController#authenticate additionally rejects anyone whose role
+# is not 'admin', so a 'user' row would not be enough.
+
+DEV_ASSESSOR = {
+  email:    ENV.fetch('SEED_ASSESSOR_EMAIL', 'assessor@test-corp.local'),
+  password: ENV.fetch('SEED_ASSESSOR_PASSWORD', 'password123'),
+  role:     'admin'
+}.freeze
+
+assessor = User.find_or_initialize_by(email: DEV_ASSESSOR[:email])
+
+if assessor.persisted?
+  puts "  Assessor already exists: #{assessor.email} (skipped)"
+else
+  assessor.password = DEV_ASSESSOR[:password]
+  assessor.role     = DEV_ASSESSOR[:role]
+  assessor.save!
+  puts "  Created assessor: #{assessor.email}"
+end
+
+puts ""
+puts "Log in to the web app with:"
+puts "  email    : #{DEV_ASSESSOR[:email]}"
+puts "  password : #{DEV_ASSESSOR[:password]}"
+puts "  (development credentials only — override with SEED_ASSESSOR_EMAIL / SEED_ASSESSOR_PASSWORD)"
+puts ""
+
 puts "Your test organization:"
 puts "  id     : #{org['id']}"
 puts "  scheme : #{org['scheme']}"
