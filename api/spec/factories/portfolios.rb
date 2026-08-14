@@ -28,6 +28,16 @@ FactoryBot.define do
     ai_confidence      { 'high' }
     evidence           { ['I introduced idempotency keys after a duplicate-charge incident.'] }
     competency_summary { 'Reasons about failure modes before reaching for a fix.' }
+
+    # The XOR check constraint means an unassessed skill has to clear both
+    # ai_level and ai_confidence, not just set a reason.
+    trait :not_assessed do
+      ai_level            { nil }
+      ai_confidence       { nil }
+      not_assessed_reason { 'never_probed' }
+      evidence            { [] }
+      competency_summary  { 'This skill was not discussed during the interview.' }
+    end
   end
 
   factory :assessor_override do
