@@ -43,7 +43,11 @@ module FitGap
       comparisons = vacancy_skills.map do |label, vacancy_skill|
         portfolio_skill = find_portfolio_skill(portfolio_skills, label, vacancy_skill.skill_id)
 
-        if portfolio_skill
+        # A skill present in the portfolio but not assessed is compared the same
+        # way as one that is absent: there is no level, so there is no gap to
+        # report. The alternative — treating "no level" as a low level — is the
+        # defect this branch of work exists to remove.
+        if portfolio_skill && portfolio_skill[:effective_level]
           candidate_level  = portfolio_skill[:effective_level]
           expected_level   = vacancy_skill.expected_level
           delta            = candidate_level - expected_level

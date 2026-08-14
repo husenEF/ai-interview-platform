@@ -180,6 +180,11 @@ module Api
           is_discovered:     skill.is_discovered,
           ai_level:          skill.ai_level,
           ai_confidence:     skill.ai_confidence,
+          # Sent even when null so the client branches on an explicit value
+          # rather than on a missing key. A UI that infers "not assessed" from
+          # `ai_level == null` alone cannot tell the reader *why*, and why is
+          # the difference between "we never asked" and "our analysis broke".
+          not_assessed_reason: skill.not_assessed_reason,
           evidence:          skill.evidence_quotes,
           competency_summary: skill.competency_summary
         }
