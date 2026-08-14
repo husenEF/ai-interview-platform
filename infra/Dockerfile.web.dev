@@ -1,0 +1,23 @@
+# Development / CI image for the React frontend.
+#
+# The repo ships no Dockerfile for web/ (it deploys to Vercel via web/vercel.json),
+# so this exists purely to make `make up` bring the whole product online with one
+# command rather than "run the API, then remember to also start Vite".
+
+FROM node:20-slim
+
+ENV NODE_ENV=development
+
+WORKDIR /app
+
+# The glob keeps this working before package-lock.json is committed and after.
+COPY web/package.json web/package-lock.json* ./
+RUN npm install
+
+COPY web/ ./
+
+EXPOSE 5173
+
+# --host is required: without it Vite binds to 127.0.0.1 inside the container
+# and the published port answers nothing from the host.
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

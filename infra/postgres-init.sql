@@ -1,0 +1,23 @@
+-- Runs once, on first initialisation of an empty postgres data volume.
+--
+-- rakamin_development is created by POSTGRES_DB; rakamin_test is not, and the
+-- RSpec suite needs it.
+--
+-- Deliberately does NOT create the ai_interview schema. The migrations depend
+-- on it being absent at first:
+--
+--   20231201000000_create_organizations   creates an UNQUALIFIED `organizations`
+--   20240101000000_create_ai_interview_schema   creates the schema itself
+--
+-- Postgres silently skips schemas that do not exist in search_path, so while
+-- ai_interview is missing, "ai_interview,public" resolves to public and that
+-- first migration puts organizations in public — which is where it belongs,
+-- since rakamin-api owns that table.
+--
+-- Pre-creating the schema here inverts that: organizations lands in
+-- ai_interview instead, a second copy appears in public once db/seeds.rb runs
+-- its CREATE TABLE IF NOT EXISTS public.organizations, and the unqualified
+-- reads resolve to the empty one. db:migrate then also dumps two identical
+-- create_table "organizations" blocks into schema.rb.
+
+CREATE DATABASE rakamin_test;
