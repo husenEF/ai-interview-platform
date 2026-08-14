@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_08_14_000000) do
+ActiveRecord::Schema[7.0].define(version: 2026_08_14_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -22,6 +22,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_14_000000) do
   create_enum "end_reason", ["manual_candidate", "manual_assessor", "all_covered", "time_ceiling", "error"]
   create_enum "fit_result", ["match", "gap", "exceed", "not_assessed"]
   create_enum "generation_status", ["pending", "generating", "complete", "failed"]
+  create_enum "not_assessed_reason", ["never_probed", "insufficient_evidence", "analysis_failed"]
   create_enum "session_status", ["pending", "active", "ended", "failed"]
   create_enum "speaker_type", ["ai", "candidate"]
 
@@ -58,13 +59,13 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_14_000000) do
 
   create_table "assessor_overrides", force: :cascade do |t|
     t.bigint "portfolio_skill_id", null: false
-    t.integer "ai_level", null: false
+    t.integer "ai_level"
     t.integer "override_level", null: false
     t.text "assessor_notes"
     t.bigint "overridden_by", null: false
     t.datetime "overridden_at", default: -> { "now()" }
     t.index ["portfolio_skill_id"], name: "index_assessor_overrides_on_portfolio_skill_id", unique: true
-    t.check_constraint "ai_level >= 1 AND ai_level <= 5", name: "chk_overrides_ai_level"
+    t.check_constraint "ai_level IS NULL OR ai_level >= 1 AND ai_level <= 5", name: "chk_overrides_ai_level"
     t.check_constraint "override_level >= 1 AND override_level <= 5", name: "chk_overrides_override_level"
   end
 
@@ -77,6 +78,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_14_000000) do
     t.integer "probe_count", default: 0, null: false
     t.text "last_signal"
     t.datetime "updated_at", default: -> { "now()" }
+    t.text "last_analysis_error"
+    t.datetime "last_analysis_failed_at"
     t.index ["session_id", "skill_label"], name: "index_coverage_maps_on_session_id_and_skill_label", unique: true
     t.index ["session_id"], name: "idx_coverage_session"
     t.index ["session_id"], name: "index_coverage_maps_on_session_id"
@@ -112,12 +115,15 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_14_000000) do
     t.string "skill_id", limit: 50
     t.string "skill_label", limit: 255, null: false
     t.boolean "is_discovered", default: false, null: false
-    t.integer "ai_level", null: false
-    t.enum "ai_confidence", null: false, enum_type: "confidence_level"
+    t.integer "ai_level"
+    t.enum "ai_confidence", enum_type: "confidence_level"
     t.jsonb "evidence", default: [], null: false
     t.text "competency_summary", null: false
+    t.enum "not_assessed_reason", enum_type: "not_assessed_reason"
+    t.index ["portfolio_id", "skill_label"], name: "index_portfolio_skills_on_portfolio_and_label", unique: true
     t.index ["portfolio_id"], name: "index_portfolio_skills_on_portfolio_id"
-    t.check_constraint "ai_level >= 1 AND ai_level <= 5", name: "chk_portfolio_skills_ai_level"
+    t.check_constraint "ai_level IS NOT NULL AND ai_confidence IS NOT NULL AND not_assessed_reason IS NULL OR ai_level IS NULL AND ai_confidence IS NULL AND not_assessed_reason IS NOT NULL", name: "chk_portfolio_skills_rating_xor"
+    t.check_constraint "ai_level IS NULL OR ai_level >= 1 AND ai_level <= 5", name: "chk_portfolio_skills_ai_level"
   end
 
   create_table "portfolios", force: :cascade do |t|
