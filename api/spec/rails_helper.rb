@@ -2,7 +2,11 @@
 
 require 'spec_helper'
 
-ENV['RAILS_ENV'] ||= 'test'
+# Assignment, not ||=. The api container sets RAILS_ENV=development, so the
+# conventional ||= leaves it there and a bare `bundle exec rspec` runs the whole
+# suite against the development database — which DatabaseCleaner then truncates.
+# The suite defines the environment it runs in; nothing else may.
+ENV['RAILS_ENV'] = 'test'
 
 require File.expand_path('../config/environment', __dir__)
 

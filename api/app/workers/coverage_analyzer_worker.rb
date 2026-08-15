@@ -30,11 +30,28 @@ class CoverageAnalyzerWorker
   rescue ActiveRecord::RecordNotFound
     Rails.logger.warn("[N7] Session #{session_id} not found — skipping")
   rescue => e
-    # N7 failure is non-critical — log and let the interview continue
+    # N7 failure is non-critical to the live interview — it must not interrupt
+    # the candidate — so the exception is still swallowed here. What changed is
+    # that it is no longer swallowed *silently*: the coverage maps it failed to
+    # update are marked, so the portfolio generator can report those skills as
+    # unanalysed rather than as never discussed.
     Rails.logger.error("[N7] Coverage analyzer failed for session #{session_id}: #{e.class} #{e.message}")
+    record_analysis_failure(session, e)
   end
 
   private
+
+  def record_analysis_failure(session, error)
+    return if session.nil?
+
+    session.coverage_maps.update_all(
+      last_analysis_error:     "#{error.class}: #{error.message}".truncate(500),
+      last_analysis_failed_at: Time.current
+    )
+  rescue => e
+    # Never let the bookkeeping itself take down the interview.
+    Rails.logger.error("[N7] Could not record analyzer failure for session #{session&.id}: #{e.message}")
+  end
 
   def apply_updates(session, skill_updates)
     skill_updates.each do |update|
