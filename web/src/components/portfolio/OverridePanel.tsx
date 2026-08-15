@@ -16,8 +16,16 @@ interface OverridePanelProps {
 }
 
 export default function OverridePanel({ skill, existingOverride, onSaved }: OverridePanelProps) {
+  const aiLevel = parseLevel(skill.ai_level);
+
   const [open, setOpen] = useState(false);
-  const [overrideLevel, setOverrideLevel] = useState(existingOverride?.override_level ?? parseLevel(skill.ai_level));
+  // Starting point for the radio when nothing has been rated yet. It used to
+  // come from parseLevel's Level 1 fallback, which quietly nudged assessors
+  // toward the lowest score on skills the AI had not judged at all. L3 is the
+  // middle of the scale, so it leans neither way.
+  const [overrideLevel, setOverrideLevel] = useState(
+    existingOverride?.override_level ?? aiLevel ?? 3
+  );
   const [notes, setNotes] = useState(existingOverride?.assessor_notes ?? "");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -47,7 +55,7 @@ export default function OverridePanel({ skill, existingOverride, onSaved }: Over
         {hasOverride ? (
           <>
             <div className="flex items-center gap-1.5 text-sm">
-              <LevelBadge level={parseLevel(skill.ai_level)} size="sm" />
+              <LevelBadge level={aiLevel} size="sm" />
               <span className="text-muted-foreground text-xs">AI</span>
               <span className="text-muted-foreground">→</span>
               <LevelBadge level={existingOverride!.override_level} size="sm" />

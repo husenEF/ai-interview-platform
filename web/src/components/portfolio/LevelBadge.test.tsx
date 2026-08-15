@@ -24,13 +24,35 @@ describe("LevelBadge", () => {
         expect(one.firstElementChild?.className).not.toBe(five.firstElementChild?.className);
     });
 
-    // Documents today's behaviour at the seam this branch's API work targets:
-    // LEVEL_LABELS is a Record<number, string> with no entry outside 1..5, so
-    // an unrated skill renders a silently empty badge rather than saying
-    // anything. The frontend slice replaces this with an explicit state.
-    it("renders an empty badge when the level is not a rated 1-5 value", () => {
-        const { container } = render(<LevelBadge level={0} />);
+    // Replaces an earlier case that documented the old behaviour: LEVEL_LABELS
+    // is a Record<number, string> with no entry outside 1..5, so an unrated
+    // skill rendered a silently empty badge. An empty badge is worse than no
+    // badge — it looks like a rendering fault, and a reader fills the gap with
+    // their own assumption about the candidate.
+    describe("when there is no level", () => {
+        it("says so instead of rendering an empty badge", () => {
+            render(<LevelBadge level={null} />);
 
-        expect(container.textContent).toBe("");
+            expect(screen.getByText(/not assessed/i)).toBeInTheDocument();
+        });
+
+        // L1 is the closest thing on screen to "no rating", and it is exactly
+        // what this branch exists to stop being confused with one. They must
+        // not be distinguishable by shape or colour alone.
+        it("does not look like Level 1", () => {
+            const { container: unassessed } = render(<LevelBadge level={null} />);
+            const { container: levelOne } = render(<LevelBadge level={1} />);
+
+            expect(unassessed.firstElementChild?.className).not.toBe(
+                levelOne.firstElementChild?.className
+            );
+            expect(unassessed.textContent).not.toBe(levelOne.textContent);
+        });
+
+        it("carries no numeral a reader could mistake for a score", () => {
+            const { container } = render(<LevelBadge level={null} />);
+
+            expect(container.textContent).not.toMatch(/[1-5]/);
+        });
     });
 });
