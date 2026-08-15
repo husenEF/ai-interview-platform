@@ -60,4 +60,8 @@ end
 group :test do
   gem 'database_cleaner'
   gem 'timecop'
+  # Every Gemini call must be stubbed. The scoring path has to be tested
+  # against timeouts, malformed JSON and null levels, and a suite that can
+  # reach the real API is neither deterministic nor free.
+  gem 'webmock'
 end

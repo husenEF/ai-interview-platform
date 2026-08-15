@@ -1,0 +1,133 @@
+name: rakamin-ai-interview
+
+# Host ports are deliberately non-default (5433 / 6380) so this stack never
+# collides with a Postgres or Redis the reviewer already has running locally.
+# Inside the compose network, services still talk on 5432 / 6379.
+
+x-api-environment: &api-environment
+  RAILS_ENV: development
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_NAME: rakamin_development
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  REDIS_URL: redis://redis:6379/1
+  # Dev-only. In the real deployment this must match rakamin-api exactly or
+  # JWTs minted by that service will not verify here.
+  SECRET_KEY_BASE: ${SECRET_KEY_BASE:-dev_only_secret_key_base_not_for_production}
+  TOKEN_EXPIRATION_TIME: "259200"
+  APP_BASE_URL: http://localhost:3001
+  ALLOWED_ORIGINS: "*"
+  # config/initializers/gemini.rb only enforces these in production, so the
+  # stack boots without a real key. Calls to Gemini will fail until one is set.
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-gemini-2.0-flash-live-001}
+  GEMINI_FLASH_MODEL: ${GEMINI_FLASH_MODEL:-gemini-2.0-flash-001}
+  GEMINI_PRO_MODEL: ${GEMINI_PRO_MODEL:-gemini-2.0-pro-001}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rakamin_development
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rakamin_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_HOST_PORT:-6380}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api.dev
+    environment:
+      <<: *api-environment
+      # Single-mode Puma in dev. config/puma.rb calls preload_app! and forks
+      # WEB_CONCURRENCY workers; forking kills the EventMachine reactor thread
+      # that faye-websocket needs. Single mode keeps the reactor started by
+      # config/initializers/eventmachine.rb intact.
+      WEB_CONCURRENCY: "0"
+      RAILS_MAX_THREADS: "5"
+    # mkdir -p is not redundant with the Dockerfile: the ../api bind mount below
+    # shadows /app, and a fresh clone has no api/tmp/pids (the .keep that
+    # api/.gitignore whitelists was never committed upstream — we add it back).
+    # config/puma.rb sets `pidfile tmp/pids/server.pid`, so without this the
+    # container dies with Errno::ENOENT before serving a request.
+    command: >
+      bash -c "mkdir -p tmp/pids tmp/cache tmp/sockets log &&
+               rm -f tmp/pids/server.pid &&
+               bundle exec puma -C config/puma.rb"
+    ports:
+      - "${API_HOST_PORT:-3001}:3001"
+    # Gems deliberately live in the image layer at /usr/local/bundle, not in a
+    # named volume. A named volume is only seeded while it is empty, so after a
+    # Gemfile change a rebuilt image would still be shadowed by the old gems —
+    # a confusing failure. The bind mount below covers /app only, so image gems
+    # stay visible and `make rebuild` is always sufficient.
+    volumes:
+      - ../api:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  sidekiq:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api.dev
+    environment: *api-environment
+    # api/Procfile omits -C config/sidekiq.yml, which silently discards the
+    # queue weights (coverage:6, portfolio:3, default:1) and concurrency.
+    # Pass it explicitly here so local behaviour matches the intended config.
+    command: bundle exec sidekiq -r ./config/environment.rb -C config/sidekiq.yml
+    volumes:
+      - ../api:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web.dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001/api/v1
+      VITE_WS_BASE_URL: ws://localhost:3001
+      VITE_DEV_TOKEN: ${VITE_DEV_TOKEN:-}
+      VITE_DEV_TENANT_ID: "1"
+      VITE_DEV_TENANT_NAME: Test Corp
+    ports:
+      - "${WEB_HOST_PORT:-5173}:5173"
+    volumes:
+      - ../web:/app
+      # Anonymous volume keeps the image's node_modules from being shadowed by
+      # the host bind mount, which has none.
+      - /app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:

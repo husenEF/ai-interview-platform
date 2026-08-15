@@ -1,0 +1,45 @@
+# Development / CI image for the Rails API.
+#
+# This deliberately is NOT api/Dockerfile. That image is production-only and
+# cannot run the test suite or boot on this project's target machines:
+#
+#   1. It runs `bundle config set --local without 'development test'`, so
+#      rspec-rails, factory_bot, database_cleaner, timecop and webmock are
+#      never installed — `bundle exec rspec` is impossible inside it.
+#   2. It hardcodes ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2,
+#      a path that does not exist on arm64. Every command in the container
+#      emits a loader warning.
+#
+# Keeping the two images separate means the production image stays lean and
+# the dev image stays honest about what it needs.
+
+FROM ruby:3.3.2-slim
+
+ENV LANG=C.UTF-8 \
+    BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_JOBS=4 \
+    BUNDLE_RETRY=3
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      git \
+      libpq-dev \
+      postgresql-client \
+      tzdata \
+      curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Gemfile.lock already lists aarch64-linux and x86_64-linux in PLATFORMS,
+# so this resolves without a platform add on either architecture.
+COPY api/Gemfile api/Gemfile.lock ./
+RUN gem install bundler:2.5.11 && bundle install
+
+COPY api/ ./
+
+RUN mkdir -p tmp/pids tmp/cache tmp/sockets log
+
+EXPOSE 3001
+
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
