@@ -29,6 +29,11 @@ export default function ComparisonTable({ comparisons }: ComparisonTableProps) {
   const matchCount = comparisons.filter((c) => c.result === "match").length;
   const gapCount = comparisons.filter((c) => c.result === "gap").length;
   const exceedCount = comparisons.filter((c) => c.result === "exceed").length;
+  // Counted and shown even when zero. The summary previously listed only the
+  // three outcomes with a verdict, so a role where four of six skills went
+  // unassessed still read "Match: 2" — a complete-looking answer drawn from a
+  // third of the evidence.
+  const notAssessedCount = comparisons.filter((c) => c.result === "not_assessed").length;
 
   return (
     <div className="space-y-3">
@@ -56,7 +61,9 @@ export default function ComparisonTable({ comparisons }: ComparisonTableProps) {
                       {c.is_override && <span className="text-xs text-muted-foreground ml-1">✏</span>}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    // A bare em-dash is ambiguous — it could be a missing skill
+                    // or a zero. Say which.
+                    <span className="text-xs text-muted-foreground italic">not assessed</span>
                   )}
                 </td>
                 <td className="px-4 py-2.5 text-center">
@@ -69,12 +76,26 @@ export default function ComparisonTable({ comparisons }: ComparisonTableProps) {
       </div>
 
       {/* Summary */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {matchCount > 0 && <span>✅ Match: {matchCount} skill{matchCount !== 1 ? "s" : ""}</span>}
         {gapCount > 0 && <span>⚠ Gap: {gapCount} skill{gapCount !== 1 ? "s" : ""}</span>}
         {exceedCount > 0 && <span>⭐ Exceeds: {exceedCount} skill{exceedCount !== 1 ? "s" : ""}</span>}
-        <span className="ml-auto">✏ = human override applied</span>
+        {notAssessedCount > 0 && (
+          <span>— Not assessed: {notAssessedCount} skill{notAssessedCount !== 1 ? "s" : ""}</span>
+        )}
+        <span className="sm:ml-auto">✏ = human override applied</span>
       </div>
+
+      {/* A fit/gap verdict drawn from part of the picture has to say so. The
+          recommendation below this table reads as a hiring signal, and a reader
+          cannot weigh it without knowing how much of the role went unexamined. */}
+      {notAssessedCount > 0 && (
+        <p className="text-xs text-muted-foreground bg-muted/50 border border-dashed rounded px-3 py-2">
+          {notAssessedCount} of {comparisons.length} required skill
+          {comparisons.length !== 1 ? "s were" : " was"} not assessed in this interview. This
+          comparison covers the rest.
+        </p>
+      )}
     </div>
   );
 }

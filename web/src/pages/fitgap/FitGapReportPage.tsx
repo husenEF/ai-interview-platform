@@ -190,10 +190,16 @@ export default function FitGapReportPage() {
                   {portfolio.skills
                     .filter((s) => s.is_discovered)
                     .map((s) => (
-                      <div key={s.id} className="text-sm flex items-center gap-2">
+                      <div key={s.id} className="text-sm flex flex-wrap items-center gap-2">
                         <span className="font-medium">{s.skill_label}</span>
+                        {/* "confirmed" was the fallback for any confidence that
+                            was not "low" — including none at all. It asserted
+                            the strongest thing on offer about a skill nothing
+                            had judged. */}
                         <span className="text-muted-foreground">
-                          {s.ai_level} ({s.ai_confidence?.toLowerCase() === "low" ? "low confidence" : "confirmed"})
+                          {s.ai_level === null
+                            ? "not assessed"
+                            : `L${s.ai_level} (${s.ai_confidence === "low" ? "low confidence" : "confirmed"})`}
                         </span>
                         <span className="text-xs text-muted-foreground">— Not required for this role, may be additive.</span>
                       </div>
