@@ -66,7 +66,12 @@ module FitGap
           expected_level:  expected_level,
           result:          result,
           delta:           delta,
-          confidence:      portfolio_skill&.dig(:confidence)
+          confidence:      portfolio_skill&.dig(:confidence),
+          # Carried through so the report can say which levels a human set.
+          # effective_portfolio_skills already knew this; dropping it here meant
+          # an assessor's own number reached a hiring artifact looking like
+          # machine output, under a legend promising overrides would be marked.
+          is_override:     portfolio_skill&.dig(:overridden) || false
         }
       end
 
