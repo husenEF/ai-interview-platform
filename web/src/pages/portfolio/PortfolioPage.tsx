@@ -197,9 +197,11 @@ export default function PortfolioPage() {
                 The interview did not produce any skill assessments. Check the transcript to see
                 how far the session got.
               </p>
-              <Button variant="outline" size="sm" onClick={regenerate}>
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Regenerate
-              </Button>
+              {/* No Regenerate button here on purpose. The API allows regeneration
+                  only from a `failed` status, so on a portfolio that generated
+                  successfully and simply found nothing, the button would offer an
+                  action that always fails. An offer the product cannot honour is
+                  worse than no offer. */}
             </div>
           ) : (
             <>
