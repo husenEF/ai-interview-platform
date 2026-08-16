@@ -151,10 +151,16 @@ export type SkillComparisonResult = "match" | "gap" | "exceed" | "not_assessed";
 
 export interface SkillComparison {
   skill_label: string;
-  required_level: number;
-  candidate_level?: number;
+  skill_id?: string | null;
+  // `expected_level`, not `required_level`. The API has always sent the former
+  // — the same name used by assessment_skills and vacancy_skills — so the
+  // comparison table rendered LEVEL_LABELS[undefined] and every row's Required
+  // column came out blank, leaving "Gap -1" with nothing to check it against.
+  expected_level: number;
+  candidate_level: number | null;
   result: SkillComparisonResult;
-  delta?: number;
+  delta: number | null;
+  confidence?: Confidence | null;
   is_override?: boolean;
 }
 

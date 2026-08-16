@@ -195,11 +195,13 @@ export default function FitGapReportPage() {
                         {/* "confirmed" was the fallback for any confidence that
                             was not "low" — including none at all. It asserted
                             the strongest thing on offer about a skill nothing
-                            had judged. */}
+                            had judged, and called a medium-confidence guess
+                            settled. Report the confidence the AI actually
+                            gave. */}
                         <span className="text-muted-foreground">
                           {s.ai_level === null
                             ? "not assessed"
-                            : `L${s.ai_level} (${s.ai_confidence === "low" ? "low confidence" : "confirmed"})`}
+                            : `L${s.ai_level} (${s.ai_confidence ?? "unknown"} confidence)`}
                         </span>
                         <span className="text-xs text-muted-foreground">— Not required for this role, may be additive.</span>
                       </div>
