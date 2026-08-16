@@ -17,7 +17,7 @@ I fixed the fabrication at its source, made "not assessed" a state the database,
 
 | | Before | After |
 |---|---|---|
-| RSpec examples | 0 | **66** |
+| RSpec examples | 0 | **67** |
 | Frontend tests | no runner installed | **48** |
 | CI | none | RSpec + Vitest + `tsc` on every PR |
 | Ratings the AI never gave | stored as Level 1 | stored as *not assessed*, with the reason |
@@ -114,6 +114,29 @@ The brief asks findings to be separated into **missing specification** (never de
 `users` had no tenant column. Nothing in the service knew which organisation an assessor belonged to. So login asked the client — see D1. *Impact: the tenant boundary had no data to rest on.*
 
 ### P0 — Defective implementation
+
+**D0 · The application cannot boot in production.** Numbered zero because it was found last and outranks everything below it: none of the other defects matter on a process that never starts.
+
+`app/channels/audio_websocket_middleware.rb` defines `AudioWebSocketMiddleware`. That path obliges it to define `AudioWebsocketMiddleware` — Zeitwerk derives the constant from the filename, and `websocket` camelizes to `Websocket`, not `WebSocket`. Same mismatch in the coverage middleware beside it.
+
+Nothing noticed, because nothing ever loaded the file eagerly:
+
+```ruby
+# config/environments/development.rb
+config.eager_load = false
+# config/environments/test.rb
+config.eager_load = ENV["CI"].present?
+# config/environments/production.rb
+config.eager_load = true
+```
+
+On a developer machine every file loads lazily and the two that Zeitwerk cannot resolve are simply never reached. Eager loading walks them and raises `NameError` during boot — before the first request, in the only environment that serves real traffic.
+
+*Impact: deploy fails, or worse, succeeds into a crash loop. The whole test suite passes while this is true.*
+
+**How it was found is the point.** I did not read it. GitHub Actions sets `CI=true`, which flipped `eager_load` on, and the api job failed on a repository whose suite was green on my machine 66 times. That is the harness from PR #4 paying for itself on its first real run — and it is the strongest argument I can make that CI belongs in this submission rather than being a checkbox.
+
+The fix renames the two files to `*_web_socket_middleware.rb` so the paths match the class names already in use. `harness_spec.rb` now calls `Rails.application.eager_load!` directly rather than trusting the environment flag, so the guard holds on a laptop too. I checked that the guard fails on the original filenames before keeping it.
 
 **D1 · Login let the caller choose their own tenant.**
 
@@ -332,7 +355,7 @@ Five branches, each stacked on the last.
 
 ### Test coverage
 
-**66 RSpec examples, 48 Vitest tests, `tsc --noEmit` clean, `npm run build` succeeds.** The backend suite was run three times under different random seeds to confirm it is order-independent — that check is what surfaced D9.
+**67 RSpec examples, 48 Vitest tests, `tsc --noEmit` clean, `npm run build` succeeds.** The backend suite was run three times under different random seeds to confirm it is order-independent — that check is what surfaced D9. It was also run with `CI=true`, which turns eager loading on, after D0 showed that the two configurations are not the same suite.
 
 Coverage is layered rather than duplicated: `Assessments::Rating` is tested directly against all nine malformed inputs, and `Portfolios::Generator` is tested separately through the real service, so the guarantee is checked both where it is implemented and where it is relied on.
 
