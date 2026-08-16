@@ -39,7 +39,7 @@ I fixed the fabrication at its source, made "not assessed" a state the database,
 | Sub-PR #8 | [Bind a user to their organization instead of asking the client](https://github.com/husenEF/ai-interview-platform/pull/8) |
 | Seeded fault | [`spike/seeded-fault`](https://github.com/husenEF/ai-interview-platform/tree/spike/seeded-fault) — pushed and kept |
 
-The sub-PRs live on the fork. A pull request's base branch cannot cross repositories, so pointing them at `rakamindev:main` would have made each one carry the whole stack and lose the single-argument shape that is the reason for splitting them.
+The sub-PRs live on the fork, and all five are merged there. A pull request's base branch cannot cross repositories, so pointing them at `rakamindev:main` would have made each one carry the whole stack and lose the single-argument shape that is the reason for splitting them. They are stacked, so they were merged bottom-up with merge commits — squashing would have rewritten the SHAs each subsequent branch was built on.
 
 ---
 
