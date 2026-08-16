@@ -99,6 +99,8 @@ Under Indonesia's **UU No. 27/2022 (PDP)** this is not only an ethical point:
 
 I checked that no personal data or secrets appear in logs or commits. Fixture candidates are invented.
 
+The upstream repository runs GitGuardian on pull requests, and it flagged one line of mine: `DB_PASSWORD: postgres` in `infra/docker-compose.yml`. It is not a live credential — it is the password of a throwaway container that the same file creates two lines later — but the scanner is right that it was hardcoded, and a red secret check on a submission is not something to explain away. Both occurrences now interpolate `${POSTGRES_PASSWORD:-postgres}`, which keeps `make up` zero-config and leaves nothing to find. I audited the rest of the diff by hand while I was there: the only other high-entropy strings are npm integrity hashes in `package-lock.json`, and no `.env` or `master.key` is tracked.
+
 ---
 
 ## Step 3 — Problem and gap analysis

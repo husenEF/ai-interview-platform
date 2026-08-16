@@ -52,7 +52,7 @@ Show `resolve_scheme` before, then run:
 ```
 curl -X POST localhost:3001/api/v1/auth/login \
   -H 'X-Tenant-Scheme: victim-corp' \
-  -d '{"email":"assessor@test-corp.local","password":"password123"}'
+  -d "{\"email\":\"assessor@test-corp.local\",\"password\":\"$SEED_ASSESSOR_PASSWORD\"}"
 ```
 
 Decode the token on screen.
