@@ -1,0 +1,60 @@
+
+        expected no rating, got Level 1 manufactured from 0
+      # ./spec/services/portfolios/generator_spec.rb:64:in `block (4 levels) in <main>'
+      # /usr/local/bundle/ruby/3.3.0/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in `block (2 levels) in <main>'
+      # ./spec/support/database_cleaner.rb:24:in `block (3 levels) in <main>'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/strategy.rb:30:in `cleaning'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/cleaners.rb:34:in `block (2 levels) in cleaning'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/cleaners.rb:35:in `cleaning'
+      # ./spec/support/database_cleaner.rb:24:in `block (2 levels) in <main>'
+
+  13) Portfolios::Generator levels the model did not actually give does not invent a rating from a missing key level (the model omitted the level key entirely)
+      Failure/Error:
+        expect(skill.ai_level).to be_nil,
+                                  "expected no rating, got Level #{skill.ai_level} manufactured from #{raw_level.inspect}"
+
+        expected no rating, got Level 1 manufactured from :absent
+      # ./spec/services/portfolios/generator_spec.rb:64:in `block (4 levels) in <main>'
+      # /usr/local/bundle/ruby/3.3.0/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in `block (2 levels) in <main>'
+      # ./spec/support/database_cleaner.rb:24:in `block (3 levels) in <main>'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/strategy.rb:30:in `cleaning'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/cleaners.rb:34:in `block (2 levels) in cleaning'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/cleaners.rb:35:in `cleaning'
+      # ./spec/support/database_cleaner.rb:24:in `block (2 levels) in <main>'
+
+  14) Portfolios::Generator levels the model did not actually give does not invent a rating from an out-of-range level (the model returned a level above the scale)
+      Failure/Error:
+        expect(skill.ai_level).to be_nil,
+                                  "expected no rating, got Level #{skill.ai_level} manufactured from #{raw_level.inspect}"
+
+        expected no rating, got Level 5 manufactured from 99
+      # ./spec/services/portfolios/generator_spec.rb:64:in `block (4 levels) in <main>'
+      # /usr/local/bundle/ruby/3.3.0/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in `block (2 levels) in <main>'
+      # ./spec/support/database_cleaner.rb:24:in `block (3 levels) in <main>'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/strategy.rb:30:in `cleaning'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/cleaners.rb:34:in `block (2 levels) in cleaning'
+      # /usr/local/bundle/ruby/3.3.0/gems/database_cleaner-core-2.0.1/lib/database_cleaner/cleaners.rb:35:in `cleaning'
+      # ./spec/support/database_cleaner.rb:24:in `block (2 levels) in <main>'
+
+Finished in 0.90984 seconds (files took 0.49588 seconds to load)
+62 examples, 14 failures
+
+Failed examples:
+
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:4]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from 0
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:2]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from "abc"
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:5]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from -1
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:3]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from ""
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:9]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from {}
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:6]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from 99
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:1]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from nil
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:8]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from []
+rspec './spec/domain/assessments/rating_spec.rb[1:1:2:7]' # Assessments::Rating.from_model_output with a level the model did not really give refuses to invent a level from 2.5
+rspec './spec/services/portfolios/generator_spec.rb[1:2:1]' # Portfolios::Generator levels the model did not actually give does not invent a rating from null level (the model returned no level at all)
+rspec './spec/services/portfolios/generator_spec.rb[1:2:2]' # Portfolios::Generator levels the model did not actually give does not invent a rating from a non-numeric level (the model returned prose where a level belongs)
+rspec './spec/services/portfolios/generator_spec.rb[1:2:4]' # Portfolios::Generator levels the model did not actually give does not invent a rating from a zero level (the model returned a level below the scale)
+rspec './spec/services/portfolios/generator_spec.rb[1:2:3]' # Portfolios::Generator levels the model did not actually give does not invent a rating from a missing key level (the model omitted the level key entirely)
+rspec './spec/services/portfolios/generator_spec.rb[1:2:5]' # Portfolios::Generator levels the model did not actually give does not invent a rating from an out-of-range level (the model returned a level above the scale)
+
+Randomized with seed 49081
+

@@ -1,0 +1,70 @@
+    138|       expect(banner).toHaveTextContent(/not assessed/i);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/19]⎯
+
+ FAIL  src/pages/portfolio/PortfolioPage.test.tsx > PortfolioPage > when part of the assessment produced no rating > names the analysis failure separately from the unasked skills
+TestingLibraryElementError: Unable to find role="status"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ src/pages/portfolio/PortfolioPage.test.tsx:153:35
+    151|       renderPage();
+    152| 
+    153|       const banner = await screen.findByRole("status");
+       |                                   ^
+    154|       await waitFor(() => expect(banner).toHaveTextContent(/could not …
+    155|       expect(banner).toHaveTextContent(/never came up/i);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/19]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 2 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: Cannot read properties of null (reading 'replace')
+ ❯ Module.parseLevel src/utils/constants.ts:11:40
+      9| export function parseLevel(level: string | number | null | undefined):…
+     10|   if (typeof level === "number") return level;
+     11|   const n = parseInt((level as string).replace(/\D/g, ""), 10);
+       |                                        ^
+     12|   return isNaN(n) ? 1 : n;
+     13| }
+ ❯ SkillPortfolioCard src/components/portfolio/SkillPortfolioCard.tsx:27:19
+
+This error originated in "src/pages/portfolio/PortfolioPage.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "says up front how many skills were not assessed". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: Cannot read properties of null (reading 'replace')
+ ❯ Module.parseLevel src/utils/constants.ts:11:40
+      9| export function parseLevel(level: string | number | null | undefined):…
+     10|   if (typeof level === "number") return level;
+     11|   const n = parseInt((level as string).replace(/\D/g, ""), 10);
+       |                                        ^
+     12|   return isNaN(n) ? 1 : n;
+     13| }
+ ❯ SkillPortfolioCard src/components/portfolio/SkillPortfolioCard.tsx:27:19
+
+This error originated in "src/pages/portfolio/PortfolioPage.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "names the analysis failure separately from the unasked skills". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ Test Files  3 failed | 4 passed (7)
+      Tests  19 failed | 29 passed (48)
+     Errors  2 errors
+   Start at  07:44:23
+   Duration  2.88s (transform 274ms, setup 1000ms, collect 795ms, tests 2.28s, environment 1.72s, prepare 375ms)
+

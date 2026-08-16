@@ -3,22 +3,13 @@ import type { NotAssessedReason } from "@/types";
 export const TIME_LIMIT_OPTIONS = [10, 30, 45, 60, 90] as const;
 
 /**
- * Parse "L3" → 3, pass a number through, and return null when there is no
- * level on the 1..5 scale.
- *
- * It returns null rather than falling back, because the fallback used to be
- * `isNaN(n) ? 1 : n` — the client half of a defect the API had too
- * (`skill_data['level'].to_i.clamp(1, 5)`). Two independent code paths turned
- * "we have no rating" into Level 1: the lowest score on the scale, shown to a
- * recruiter as a real judgement about a candidate who may never have been
- * asked. Absence is not a low score, and callers have to handle it as absence.
+ * SEEDED FAULT — the original client-side implementation, restored verbatim.
+ * This branch exists to show the suite catching it. Do not merge.
  */
 export function parseLevel(level: string | number | null | undefined): number | null {
-  if (level === null || level === undefined) return null;
-
-  const n = typeof level === "number" ? level : parseInt(level.replace(/\D/g, ""), 10);
-
-  return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
+  if (typeof level === "number") return level;
+  const n = parseInt((level as string).replace(/\D/g, ""), 10);
+  return isNaN(n) ? 1 : n;
 }
 
 export const LEVEL_LABELS: Record<number, string> = {

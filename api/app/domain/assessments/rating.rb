@@ -46,20 +46,10 @@ module Assessments
 
       private
 
-      # Deliberately strict, and deliberately not clamping. A level outside the
-      # scale means the model did not answer the question that was asked, and
-      # rounding 99 down to 5 or 0 up to 1 presents that as a judgement about
-      # the candidate. Integer-valued floats are accepted because JSON has one
-      # number type and some models emit 3.0.
+      # SEEDED FAULT — the original coercion, restored verbatim. This branch
+      # exists to show the suite catching it. Do not merge.
       def coerce_level(raw)
-        level =
-          case raw
-          when Integer then raw
-          when Float   then (raw % 1).zero? ? raw.to_i : nil
-          when String  then raw.match?(/\A\s*-?\d+\s*\z/) ? raw.to_i : nil
-          end
-
-        SCALE.cover?(level) ? level : nil
+        raw.to_i.clamp(1, 5)
       end
 
       # An unrecognised confidence is not worth discarding a real level over,
