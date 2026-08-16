@@ -39,6 +39,20 @@ RSpec.describe 'test harness' do
       .to raise_error(WebMock::NetConnectNotAllowedError)
   end
 
+  # Production sets config.eager_load = true, and test sets it to
+  # ENV['CI'].present? — so on a developer machine every file is loaded lazily
+  # and a name Zeitwerk cannot resolve is invisible until deploy.
+  #
+  # app/channels/audio_websocket_middleware.rb defined AudioWebSocketMiddleware,
+  # while that path obliges it to define AudioWebsocketMiddleware. The whole
+  # suite passed locally; the boot raised NameError in production and in CI.
+  #
+  # Eager loading here rather than trusting the environment flag, so the guard
+  # holds wherever the suite runs.
+  it 'eager loads, which is what production does before serving a request' do
+    expect { Rails.application.eager_load! }.not_to raise_error
+  end
+
   describe 'as_tenant' do
     it 'scopes TenantScoped models and restores the previous context' do
       mine   = create(:assessment, tenant_id: 1)
