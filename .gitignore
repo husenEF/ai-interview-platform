@@ -18,7 +18,4 @@ web/.vite/
 # OS
 .DS_Store
 
-# The trailing-slash-only form matches a directory of this name at ANY depth.
-# Without the leading slash it also swallowed web/src/components/assessment/,
-# whose four components are imported by six files.
 /assessment/
