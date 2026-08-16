@@ -85,13 +85,34 @@ export interface Portfolio {
   overrides: AssessorOverride[];
 }
 
+export type Confidence = "high" | "medium" | "low";
+
+/**
+ * Why a skill carries no level. The three cases read very differently to
+ * whoever is deciding on this person, so they stay distinct rather than
+ * collapsing into a single "N/A": never_probed means nobody asked,
+ * analysis_failed means we asked but our own analysis broke, and only
+ * insufficient_evidence is about the answer the candidate actually gave.
+ */
+export type NotAssessedReason =
+  | "never_probed"
+  | "insufficient_evidence"
+  | "analysis_failed";
+
 export interface PortfolioSkill {
   id: number;
-  skill_id?: number;
+  /** e.g. "SK-ENG-001" — a string, and absent for discovered skills. */
+  skill_id?: string | null;
   skill_label: string;
   is_discovered: boolean;
-  ai_level: string;       // "L1" | "L2" | "L3" | "L4" | "L5"
-  ai_confidence: string;  // "high" | "medium" | "low"
+  /**
+   * null when the skill was not assessed. The API sends a number; the previous
+   * `string` annotation described an "L3" format it has never sent, which is
+   * why nothing here was ready for null to arrive.
+   */
+  ai_level: number | null;
+  ai_confidence: Confidence | null;
+  not_assessed_reason: NotAssessedReason | null;
   evidence: string[];
   competency_summary: string;
 }
@@ -99,7 +120,8 @@ export interface PortfolioSkill {
 export interface AssessorOverride {
   id: number;
   portfolio_skill_id: number;
-  ai_level: number;
+  /** What the AI said when the assessor disagreed — null when it said nothing. */
+  ai_level: number | null;
   override_level: number;
   assessor_notes: string;
   overridden_by?: number;
@@ -129,10 +151,16 @@ export type SkillComparisonResult = "match" | "gap" | "exceed" | "not_assessed";
 
 export interface SkillComparison {
   skill_label: string;
-  required_level: number;
-  candidate_level?: number;
+  skill_id?: string | null;
+  // `expected_level`, not `required_level`. The API has always sent the former
+  // — the same name used by assessment_skills and vacancy_skills — so the
+  // comparison table rendered LEVEL_LABELS[undefined] and every row's Required
+  // column came out blank, leaving "Gap -1" with nothing to check it against.
+  expected_level: number;
+  candidate_level: number | null;
   result: SkillComparisonResult;
-  delta?: number;
+  delta: number | null;
+  confidence?: Confidence | null;
   is_override?: boolean;
 }
 

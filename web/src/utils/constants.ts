@@ -1,10 +1,24 @@
+import type { NotAssessedReason } from "@/types";
+
 export const TIME_LIMIT_OPTIONS = [10, 30, 45, 60, 90] as const;
 
-/** Parse "L3" → 3, passthrough number, fallback to 1 */
-export function parseLevel(level: string | number): number {
-  if (typeof level === "number") return level;
-  const n = parseInt(level.replace(/\D/g, ""), 10);
-  return isNaN(n) ? 1 : n;
+/**
+ * Parse "L3" → 3, pass a number through, and return null when there is no
+ * level on the 1..5 scale.
+ *
+ * It returns null rather than falling back, because the fallback used to be
+ * `isNaN(n) ? 1 : n` — the client half of a defect the API had too
+ * (`skill_data['level'].to_i.clamp(1, 5)`). Two independent code paths turned
+ * "we have no rating" into Level 1: the lowest score on the scale, shown to a
+ * recruiter as a real judgement about a candidate who may never have been
+ * asked. Absence is not a low score, and callers have to handle it as absence.
+ */
+export function parseLevel(level: string | number | null | undefined): number | null {
+  if (level === null || level === undefined) return null;
+
+  const n = typeof level === "number" ? level : parseInt(level.replace(/\D/g, ""), 10);
+
+  return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
 }
 
 export const LEVEL_LABELS: Record<number, string> = {
@@ -22,6 +36,31 @@ export const LEVEL_DESCRIPTIONS: Record<number, string> = {
   4: "Advanced",
   5: "Expert",
 };
+
+// Shown in place of a level. Written as sentences a recruiter can act on,
+// not as enum names: the reason is the whole point of keeping three of them.
+export const NOT_ASSESSED_LABEL = "Not assessed";
+
+export const NOT_ASSESSED_DESCRIPTIONS: Record<NotAssessedReason, string> = {
+  never_probed:
+    "This skill was not discussed during the interview, so there is nothing to assess it from.",
+  insufficient_evidence:
+    "The interview did not produce enough evidence to rate this skill.",
+  analysis_failed:
+    "Automated analysis did not complete for this skill. This does not mean it was not discussed.",
+};
+
+/** Fallback for a skill with no level and no reason — the API should not
+ *  produce this (a check constraint forbids it), but the UI must not go blank
+ *  if it ever does. */
+export const NOT_ASSESSED_FALLBACK_DESCRIPTION =
+  "No rating is available for this skill.";
+
+// Deliberately not a neutral fill: L1 is `bg-neutral-200`, and an unassessed
+// skill that reads as a muted grey chip is exactly the confusion this state
+// exists to remove. A dashed outline reads as "nothing here", not "lowest".
+export const NOT_ASSESSED_BADGE_CLASSES =
+  "border border-dashed border-muted-foreground/50 bg-transparent text-muted-foreground";
 
 // L-badge colors (Tailwind classes)
 export const LEVEL_BADGE_CLASSES: Record<number, string> = {

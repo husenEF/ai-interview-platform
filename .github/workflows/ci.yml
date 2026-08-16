@@ -46,6 +46,13 @@ jobs:
       DB_PASSWORD: postgres
       REDIS_URL: redis://localhost:6379/1
       SECRET_KEY_BASE: ci_only_secret_key_base
+      # config/initializers/cors.rb uses ENV.fetch with no default, so booting
+      # Rails without this raises before a single spec runs. Left as a hard
+      # fetch on purpose — a CORS policy that quietly defaults to something
+      # permissive is worse than one that refuses to start. Named here instead,
+      # and not as "*", so the value in a config file is never worth copying
+      # into a deployment.
+      ALLOWED_ORIGINS: http://localhost:5173
 
     steps:
       - uses: actions/checkout@v4
